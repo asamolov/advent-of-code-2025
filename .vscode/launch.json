@@ -2,6 +2,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "w/ min",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "args": [
+                "input_min.txt"
+            ]
+        },
+        {
             "name": "w/ input.txt",
             "type": "go",
             "request": "launch",
