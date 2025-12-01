@@ -12,7 +12,7 @@ func check(e error) {
 	}
 }
 
-func readInput() []string {
+func ReadInput() []string {
 	var path string
 	if len(os.Args) == 2 {
 		path = os.Args[1]

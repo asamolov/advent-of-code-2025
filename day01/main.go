@@ -7,9 +7,10 @@ import (
 )
 
 func main() {
-	lines := utils.readInput()
+	defer utils.Timer("task")()
+	lines := utils.ReadInput()
 	fmt.Println("reading input")
 	for i, l := range lines {
-		fmt.Println("%3d: %s", i, l)
+		fmt.Printf("%3d: %s\n", i, l)
 	}
 }

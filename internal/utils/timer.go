@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func timer(name string) func() {
+func Timer(name string) func() {
 	start := time.Now()
 	return func() {
 		fmt.Printf("[%s]: %s\n", name, time.Since(start))
