@@ -7,12 +7,26 @@ import (
 )
 
 type Field struct {
-	lines         []string
+	lines         [][]byte
 	height, width int
 }
 
-func newField(lines []string) Field {
-	return Field{lines: lines, height: len(lines), width: len(lines[0])}
+func newField(strings []string) Field {
+	bytes := make([][]byte, 0, len(strings))
+	for _, l := range strings {
+		bytes = append(bytes, []byte(l))
+	}
+	return Field{lines: bytes, height: len(bytes), width: len(bytes[0])}
+}
+
+func (f *Field) clone() Field {
+	bytes := make([][]byte, 0, len(f.lines))
+	for _, l := range f.lines {
+		cl := make([]byte, len(l))
+		copy(cl, l)
+		bytes = append(bytes, cl)
+	}
+	return Field{lines: bytes, height: f.height, width: f.width}
 }
 
 func (f *Field) nRolls(x, y int) int {
@@ -25,8 +39,9 @@ func (f *Field) nRolls(x, y int) int {
 	return 0
 }
 
-func (f *Field) accessibleRolls() int {
-	result := 0
+func (f *Field) removeRolls() (int, *Field) {
+	removed := 0
+	newField := f.clone()
 	for x := 0; x < f.width; x++ {
 		for y := 0; y < f.height; y++ {
 			if f.nRolls(x, y) == 0 {
@@ -37,11 +52,12 @@ func (f *Field) accessibleRolls() int {
 			rolls += f.nRolls(x-1, y) + f.nRolls(x+1, y)
 			rolls += f.nRolls(x-1, y+1) + f.nRolls(x, y+1) + f.nRolls(x+1, y+1)
 			if rolls < 4 {
-				result++
+				removed++
+				newField.lines[y][x] = 'x'
 			}
 		}
 	}
-	return result
+	return removed, &newField
 }
 
 func main() {
@@ -52,7 +68,16 @@ func main() {
 	result := 0
 	result2 := 0
 	f := newField(lines)
-	result = f.accessibleRolls()
+	result, _ = f.removeRolls()
+
+	for {
+		nRemoved, newField := f.removeRolls()
+		if nRemoved == 0 {
+			break
+		}
+		result2 += nRemoved
+		f = *newField
+	}
 	fmt.Printf("result: %d\n", result)
 	fmt.Printf("result2: %d\n", result2)
 }
