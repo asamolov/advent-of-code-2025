@@ -32,13 +32,28 @@ func (interval *Interval) Contains(i int) bool {
 	return i >= interval.start && i <= interval.finish
 }
 
-func checkRanges(ranges []*Interval, i int) bool {
+func (interval *Interval) Size() int {
+	return interval.finish - interval.start + 1
+}
+func (interval *Interval) String() string {
+	return fmt.Sprintf("%d-%d", interval.start, interval.finish)
+}
+
+func (interval *Interval) Overlap(other *Interval) *Interval {
+	if interval.Contains(other.start) || interval.Contains(other.finish) ||
+		other.Contains(interval.start) || other.Contains(interval.finish) {
+		return &Interval{start: min(interval.start, other.start), finish: max(interval.finish, other.finish)}
+	}
+	return nil
+}
+
+func checkRanges(ranges []*Interval, i int) (*Interval, bool) {
 	for _, r := range ranges {
 		if r.Contains(i) {
-			return true
+			return r, true
 		}
 	}
-	return false
+	return nil, false
 }
 
 func main() {
@@ -70,10 +85,46 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		if checkRanges(ranges, i) {
+		_, inAnyRange := checkRanges(ranges, i)
+		if inAnyRange {
 			result++
 		}
 	}
+
+	// merge intervals in-place
+	mergeIntervals(ranges)
+
+	// calculate sizes
+	for _, i := range ranges {
+		if i != nil {
+			fmt.Printf("Merged interval: %s\n", i)
+			result2 += i.Size()
+		}
+	}
+
 	fmt.Printf("result: %d\n", result)
 	fmt.Printf("result2: %d\n", result2)
+}
+
+func mergeIntervals(ranges []*Interval) (hasMerged bool) {
+	for idx, r := range ranges {
+		if r == nil {
+			continue
+		}
+		for i := idx + 1; i < len(ranges); i++ {
+			overlapCandidate := ranges[i]
+			if overlapCandidate == nil {
+				continue
+			}
+			newInterval := r.Overlap(overlapCandidate)
+			if newInterval != nil {
+				fmt.Printf("Merging %s + %s => %s\n", r, overlapCandidate, newInterval)
+				ranges[i] = newInterval
+				ranges[idx] = nil
+				hasMerged = true
+				break
+			}
+		}
+	}
+	return
 }
