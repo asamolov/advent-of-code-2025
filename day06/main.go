@@ -9,11 +9,36 @@ import (
 )
 
 func add(agg int, item int) int {
+	fmt.Printf("+%d", item)
 	return agg + item
 }
 
 func mul(agg int, item int) int {
+	fmt.Printf("*%d", item)
 	return agg * item
+}
+
+func Slice(lines []string, idx int) string {
+	var sb strings.Builder
+	for _, l := range lines {
+		sb.WriteByte(l[idx])
+	}
+	return sb.String()
+}
+
+func ColInt(lines []string, idx int) int {
+	s := strings.TrimSpace(Slice(lines, idx))
+	i, _ := strconv.Atoi(s)
+	return i
+}
+
+func allSpaces(lines []string, idx int) bool {
+	for _, l := range lines {
+		if l[idx] != ' ' {
+			return false
+		}
+	}
+	return true
 }
 
 func main() {
@@ -57,8 +82,40 @@ func main() {
 		for _, arg := range args {
 			acc = fn(acc, arg[idx])
 		}
+		fmt.Printf("=%d\n", acc)
 		result += acc
 	}
+
+	fmt.Println("Part 2")
+	opIdx := 0
+	acc := 0
+	fn := add
+	if ops[opIdx] == "*" {
+		fn = mul
+		acc = 1
+	}
+	argLines := lines[:len(lines)-1]
+	// transposed problems one by one
+	for i := 0; i < len(lines[0]); i++ {
+		if allSpaces(lines, i) {
+			fmt.Printf("=%d\n", acc)
+			result2 += acc
+			// start new problem - reset accumulator and select fn
+			opIdx++
+			op := ops[opIdx]
+			fn = add
+			acc = 0
+			if op == "*" {
+				fn = mul
+				acc = 1
+			}
+		} else {
+			acc = fn(acc, ColInt(argLines, i))
+		}
+	}
+	// final acc
+	fmt.Printf("=%d\n", acc)
+	result2 += acc
 
 	fmt.Printf("result: %d\n", result)
 	fmt.Printf("result2: %d\n", result2)
