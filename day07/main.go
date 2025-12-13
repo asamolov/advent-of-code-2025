@@ -8,15 +8,18 @@ import (
 
 type Field struct {
 	lines         [][]byte
+	timelines     [][]int
 	height, width int
 }
 
 func newField(strings []string) Field {
 	bytes := make([][]byte, 0, len(strings))
+	timelines := make([][]int, 0, len(strings))
 	for _, l := range strings {
 		bytes = append(bytes, []byte(l))
+		timelines = append(timelines, make([]int, len(l)))
 	}
-	return Field{lines: bytes, height: len(bytes), width: len(bytes[0])}
+	return Field{lines: bytes, timelines: timelines, height: len(bytes), width: len(bytes[0])}
 }
 
 func (f *Field) clone() Field {
@@ -63,6 +66,44 @@ func (f *Field) propagateBeam(level int) (int, *Field) {
 	return splits, &next
 }
 
+func (f *Field) findTimelinesDfs(level, pos int) int {
+	level++
+	if level >= f.height {
+		return 1
+	}
+
+	timelines := 0
+	ch := f.lines[level][pos]
+	if ch == '^' {
+		timelines += f.findTimelinesDfs(level, pos-1)
+		timelines += f.findTimelinesDfs(level, pos+1)
+	} else {
+		timelines += f.findTimelinesDfs(level, pos)
+	}
+	return timelines
+}
+
+func (f *Field) findTimelinesBfs() int {
+	timelinesAtLevel := 0
+	f.timelines[0][f.findStart()] = 1
+	for level := 1; level < f.height; level++ {
+		timelinesAtLevel = 0
+		for i, ch := range f.lines[level] {
+			timelines := f.timelines[level-1][i]
+			if ch == '^' {
+				f.timelines[level][i-1] += timelines
+				f.timelines[level][i+1] += timelines
+				timelinesAtLevel += 2 * timelines
+			} else {
+				f.timelines[level][i] += timelines
+				timelinesAtLevel += timelines
+			}
+		}
+		fmt.Printf("%4d: %d\n", level, timelinesAtLevel)
+	}
+	return timelinesAtLevel
+}
+
 func main() {
 	defer utils.Timer("task")()
 
@@ -76,6 +117,8 @@ func main() {
 		result += splits
 		f = *newField
 	}
+	f = newField(lines)
+	result2 += f.findTimelinesBfs()
 	fmt.Printf("result: %d\n", result)
 	fmt.Printf("result2: %d\n", result2)
 }
