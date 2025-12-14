@@ -118,6 +118,39 @@ func main() {
 		result *= len(*c)
 	}
 
+	left, rigth := mergeTillSignleCircuit(boxes, cables)
+	result2 = left.x * rigth.x
+
 	fmt.Printf("result: %d\n", result)
 	fmt.Printf("result2: %d\n", result2)
+}
+
+func mergeTillSignleCircuit(boxes []JunctionBox, cables []Cable) (left, rigth JunctionBox) {
+	// junction -> circuit
+	idx := make(map[JunctionBox]*[]JunctionBox)
+	// prefill
+	for _, j := range boxes {
+		idx[j] = &[]JunctionBox{j}
+	}
+
+	for _, c := range cables {
+		// merge circuits
+		leftC := idx[c.left]
+		rightC := idx[c.right]
+		// update pointers to new circuit
+		fmt.Printf("Cable %v\n", c)
+		if leftC != rightC {
+			mergedCircuit := make([]JunctionBox, 0)
+			mergedCircuit = append(mergedCircuit, *leftC...)
+			mergedCircuit = append(mergedCircuit, *rightC...)
+			fmt.Printf("M: %v + %v => %v\n", *leftC, *rightC, mergedCircuit)
+			for _, j := range mergedCircuit {
+				idx[j] = &mergedCircuit
+			}
+			if len(mergedCircuit) == len(boxes) {
+				return c.left, c.right
+			}
+		}
+	}
+	return JunctionBox{}, JunctionBox{}
 }
